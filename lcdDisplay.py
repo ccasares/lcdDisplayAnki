@@ -312,7 +312,6 @@ def handleButton(button, screen, event):
 	  cad.lcd.set_cursor(0, 1)
 	  cad.lcd.write("IOT PROXY...")
 	  run_cmd(RESET_IOTPROXY_CMD)
-	  displayInfoRotation(event.chip)
     if button == BUTTON1:
 	  buttonWaitingForConfirmation = button
 	  cad.lcd.clear()
