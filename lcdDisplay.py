@@ -38,6 +38,7 @@ REBOOT_CMD = "sudo reboot"
 POWEROFF_CMD = "sudo poweroff"
 KILL_SNIFFER_CMD = "/home/pi/ankiEventSniffer/killSniffer.sh"
 KILL_SNIFFERS_CMD = "/home/pi/ankiEventSniffer/killSniffers.sh"
+RESET_IOTPROXY_CMD = "forever stop iot;forever start --uid iot --append /home/pi/node/iotcswrapper/server.js /home/pi/node/iotcswrapper/AAAAAARXSIIA-AE.json"
 piusergroup=1000
 
 race_status_file="/home/pi/race_status.dat"
@@ -300,6 +301,29 @@ def handleButton(button, screen, event):
 	  resetSniffer(event, button)
 	else:
 	  resetSniffers(event)
+  elif screen == IOTPROXY:
+    # 1: RESTART
+    # 5: CONFIRM
+    if buttonWaitingForConfirmation != -1 and button == BUTTON5:
+	  # Confirmation to previous command
+	  cad.lcd.clear()
+	  cad.lcd.set_cursor(0, 0)
+	  cad.lcd.write("RESTARTING")
+	  cad.lcd.set_cursor(0, 1)
+	  cad.lcd.write("IOT PROXY...")
+	  run_cmd(RESET_IOTPROXY_CMD)
+      displayInfoRotation(event.chip)
+    if button == BUTTON1:
+	  buttonWaitingForConfirmation = button
+	  cad.lcd.clear()
+	  cad.lcd.set_cursor(0, 0)
+	  cad.lcd.write("RESTART REQUEST")
+	  cad.lcd.set_cursor(0, 1)
+	  cad.lcd.write("CONFIRM RIGHTBTN")
+    else:
+	  if buttonWaitingForConfirmation != -1:
+	    displayInfoRotation(event.chip)
+	    buttonWaitingForConfirmation = -1
   elif screen == RACE:
     # 1: START RACE
     # 2: STOP RACE
