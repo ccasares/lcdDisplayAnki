@@ -41,12 +41,13 @@ KILL_SNIFFERS_CMD = "/home/pi/ankiEventSniffer/killSniffers.sh"
 RESET_IOTPROXY_CMD = "forever stop iot;forever start --uid iot --append /home/pi/node/iotcswrapper/server.js /home/pi/node/iotcswrapper/AAAAAARXSIIA-AE.json"
 piusergroup=1000
 
-race_status_file="/home/pi/race_status.dat"
-race_count_file="/home/pi/race_count.dat"
-race_lap_Thermo_file="/home/pi/race_lap_Thermo.dat"
-race_lap_GroundShock_file="/home/pi/race_lap_Ground Shock.dat"
-race_lap_Skull_file="/home/pi/race_lap_Skull.dat"
-race_lap_Guardian_file="/home/pi/race_lap_Guardian.dat"
+race_status_file="/home/pi/setup/race_status.dat"
+race_count_file="/home/pi/setup/race_count.dat"
+race_lap_Thermo_file="/home/pi/setup/race_lap_Thermo.dat"
+race_lap_GroundShock_file="/home/pi/setup/race_lap_Ground Shock.dat"
+race_lap_Skull_file="/home/pi/setup/race_lap_Skull.dat"
+race_lap_Guardian_file="/home/pi/setup/race_lap_Guardian.dat"
+race_lap_file="/home/pi/setup/race_lap_%s.dat"
 
 def getRest(message, url):
   #data_json = json.dumps(message)
@@ -64,7 +65,8 @@ def postRest(message, url):
   return response;
 
 def get_lap(car):
-  filename = "/home/pi/race_lap_%s.dat" % car
+  global race_lap_file
+  filename = race_lap_file % car
   try:
     with open(filename, 'r') as f:
       first_line = f.readline()
