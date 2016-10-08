@@ -10,10 +10,11 @@ import os
 INIT=0
 WIFI=1
 SNIFFERS=2
-RACE=3
-LAPS=4
+IOTPROXY=3
+RACE=4
+LAPS=5
 currentInfoDisplay=0
-maxInfoDisplay=4
+maxInfoDisplay=5
 buttonWaitingForConfirmation=-1
 
 BUTTON1=0
@@ -29,6 +30,8 @@ GET_IP_CMD = "hostname --all-ip-addresses"
 GET_WIFI_CMD = "sudo iwconfig wlan0 | grep ESSID | awk -F\":\" '{print $2}' | awk -F'\"' '{print $2}'"
 RESET_WIFI_CMD = "sudo ifdown wlan0;sleep 5;sudo ifup wlan0"
 CHECK_INTERNET_CMD = "sudo ping -q -w 1 -c 1 8.8.8.8 > /dev/null 2>&1 && echo U || echo D"
+CHECK_IOTPROXY_CMD = "[ \"`ps -ef | grep -v grep | grep iotcswrapper| grep -v forever  | wc -l`\" == \"1\" ] && echo UP || echo DOWN"
+CHECK_IOTPROXY_STATUS_CMD = "curl http://localhost:8888/iot/status 2> /dev/null || echo ERROR"
 USB_PORTS_CMD = "ls -1 /dev/ttyU* 2>/dev/null | wc -l"
 SNIFFERS_RUNNING_CMD = "ps -ef | grep -v grep | grep  ttyUSB | wc -l"
 REBOOT_CMD = "sudo reboot"
@@ -80,6 +83,8 @@ def displayInfoRotation(cad):
     wifiDisplay(cad)
   elif currentInfoDisplay == SNIFFERS:
     sniffersDisplay(cad)
+  elif currentInfoDisplay == IOTPROXY:
+    iotproxyDisplay(cad)
   elif currentInfoDisplay == RACE:
     raceDisplay(cad)
   elif currentInfoDisplay == LAPS:
@@ -110,6 +115,13 @@ def sniffersDisplay(cad):
   cad.lcd.set_cursor(0, 1)
   cad.lcd.write("SNIF RUNNING: %02d" % get_sniffers_running())
 
+def iotproxyDisplay(cad):
+  cad.lcd.clear()
+  cad.lcd.set_cursor(0, 0)
+  cad.lcd.write("WRAPPER: %s" % get_iotproxy_run_status())
+  cad.lcd.set_cursor(0, 1)
+  cad.lcd.write("STATUS: %s" % get_iotproxy_status())
+
 def raceDisplay(cad):
   status=get_race_status()
   id=get_race_count()
@@ -130,7 +142,7 @@ def raceLapsDisplay(cad):
   cad.lcd.write("RACE TH:%02d GS:%02d" % (lap_Thermo,lap_GroundShock))
   cad.lcd.set_cursor(0, 1)
   cad.lcd.write("LAPS SK:%02d GU:%02d" % (lap_Skull,lap_Guardian))
-  
+
 def piIdDisplay(cad):
   cad.lcd.clear()
   cad.lcd.set_cursor(0, 0)
@@ -238,7 +250,7 @@ def handleButton(button, screen, event):
 	  cad.lcd.clear()
 	  cad.lcd.set_cursor(0, 0)
 	  cad.lcd.write(msg)
-	  run_cmd(CMD)      
+	  run_cmd(CMD)
     if button == BUTTON1 or button == BUTTON2:
 	  buttonWaitingForConfirmation = button
 	  if button == BUTTON1:
@@ -309,7 +321,7 @@ def handleButton(button, screen, event):
 def buttonPressed(event):
 #  print "Event: "+str(event.pin_num)
   global currentInfoDisplay
-  
+
   if event.pin_num == BUTTONLEFT:
     if currentInfoDisplay > 0:
       currentInfoDisplay=currentInfoDisplay-1
@@ -332,7 +344,7 @@ def buttonPressed(event):
   else:
     event.chip.lcd.set_cursor(0, 14)
     event.chip.lcd.write(str(event.pin_num))
-  
+
 def get_race_status():
   try:
     with open(race_status_file, 'r') as f:
@@ -397,6 +409,12 @@ def get_usb_ports():
 def get_sniffers_running():
   return int(run_cmd(SNIFFERS_RUNNING_CMD))
 
+def get_iotproxy_run_status():
+  return run_cmd(CHECK_IOTPROXY_CMD)
+
+def get_iotproxy_status():
+  return run_cmd(CHECK_IOTPROXY_STATUS_CMD)
+
 def get_my_wifi():
   return run_cmd(GET_WIFI_CMD)[:-1]
 
@@ -437,4 +455,3 @@ listener = pifacecad.SwitchEventListener(chip=cad)
 for i in range(8):
   listener.register(i, pifacecad.IODIR_FALLING_EDGE, buttonPressed)
 listener.activate()
-
