@@ -83,15 +83,13 @@ def sync_bics():
   demozone = read_file(demozone_file)
   dbcs = dbcs.rstrip()
   demozone = demozone.rstrip()
-
-  print dbcs
-  print demozone
-
   url = dbcs + "/apex/pdb1/anki/iotcs/setup/" + demozone
-  print url
   iotcs = getRest("", url)
-  print iotcs.status_code
-  print iotcs.content
+  if iotcs.status_code == 200:
+    data = json.load(iotcs.content)
+    print data
+  else:
+    print "Error retrieving IoTCS setup from DBCS: " + iotcs.status_code
 
 def get_lap(car):
   global race_lap_file
