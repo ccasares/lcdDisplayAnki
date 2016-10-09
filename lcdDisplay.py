@@ -86,7 +86,7 @@ def sync_bics():
   url = dbcs + "/apex/pdb1/anki/iotcs/setup/" + demozone
   iotcs = getRest("", url)
   if iotcs.status_code == 200:
-    data = json.load(iotcs.content)
+    data = json.loads(iotcs.content)
     print data
   else:
     print "Error retrieving IoTCS setup from DBCS: " + iotcs.status_code
