@@ -87,8 +87,16 @@ def sync_bics():
   iotcs = getRest("", url)
   if iotcs.status_code == 200:
     data = json.loads(iotcs.content)
-    print data
-    print data["items"][0]["hostname"]
+    hostname = data["items"][0]["hostname"]
+    port = data["items"][0]["port"]
+    username = data["items"][0]["username"]
+    password = data["items"][0]["password"]
+    applicationid = data["items"][0]["applicationid"]
+    integrationid = data["items"][0]["integrationid"]
+    url = "https://" + hostname + ":" + port + "/iot/api/v2/apps/" + applicationid + "/integrations/" + integrationid + "/sync/now"
+    resp = requests.post(url, auth=(username, password))
+    print resp
+
   else:
     print "Error retrieving IoTCS setup from DBCS: " + iotcs.status_code
 
