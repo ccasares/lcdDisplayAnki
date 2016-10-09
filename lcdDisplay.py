@@ -48,6 +48,8 @@ race_lap_GroundShock_file="/home/pi/setup/race_lap_Ground Shock.dat"
 race_lap_Skull_file="/home/pi/setup/race_lap_Skull.dat"
 race_lap_Guardian_file="/home/pi/setup/race_lap_Guardian.dat"
 race_lap_file="/home/pi/setup/race_lap_%s.dat"
+demozone_file="/home/pi/setup/demozone.dat"
+dbcs_host_file="/home/pi/setup/dbcs.dat"
 
 def getRest(message, url):
   #data_json = json.dumps(message)
@@ -60,9 +62,30 @@ def postRest(message, url):
   #data_json = json.dumps(message)
   #headers = {'Content-type': 'application/json'}
   #response = requests.post(url, data=data_json, headers=headers)
-  print "Posting to "+url
+  #print "Posting to "+url
   response = requests.post(url, verify=False)
   return response;
+
+def read_file(filename):
+  try:
+    with open(filename, 'r') as f:
+      first_line = f.readline()
+      return(first_line)
+  except (IOError):
+      print "%s file not found!!!"
+      return ""
+
+def sync_bics():
+  global demozone_file
+  global dbcs_host_file
+
+  dbcs = read_file(dbcs_host_file)
+  demozone = read_file(demozone_file)
+
+  url = dbcs + "/apex/pdb1/anki/iotcs/setup/" + demozone
+  iotcs = getRequest("", url)
+  print iotcs.status_code
+  print iotcs.content
 
 def get_lap(car):
   global race_lap_file
@@ -475,6 +498,8 @@ cad.lcd.backlight_on()
 cad.lcd.blink_off()
 cad.lcd.cursor_off()
 initDisplay(cad)
+
+sync_bics()
 
 listener = pifacecad.SwitchEventListener(chip=cad)
 for i in range(8):
