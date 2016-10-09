@@ -95,7 +95,7 @@ def sync_bics():
     integrationid = data["items"][0]["integrationid"]
     url = "https://" + hostname + ":" + str(port) + "/iot/api/v2/apps/" + applicationid + "/integrations/" + integrationid + "/sync/now"
     resp = requests.post(url, auth=(username, password))
-    if resp.status_code !== 202:
+    if resp.status_code != 202:
         print "Error synchronizing BICS: " + resp.status_code
   else:
     print "Error retrieving IoTCS setup from DBCS: " + iotcs.status_code
