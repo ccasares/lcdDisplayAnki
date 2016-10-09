@@ -88,7 +88,7 @@ def sync_bics():
   if iotcs.status_code == 200:
     data = json.loads(iotcs.content)
     print data
-    print data["items"]["hostname"]
+    print data["items"][0]["hostname"]
   else:
     print "Error retrieving IoTCS setup from DBCS: " + iotcs.status_code
 
