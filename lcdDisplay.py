@@ -82,6 +82,9 @@ def sync_bics():
   dbcs = read_file(dbcs_host_file)
   demozone = read_file(demozone_file)
 
+  print dbcs
+  print demozone
+
   url = dbcs + "/apex/pdb1/anki/iotcs/setup/" + demozone
   print url
   iotcs = getRest("", url)
