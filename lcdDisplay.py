@@ -97,8 +97,10 @@ def sync_bics():
     resp = requests.post(url, auth=(username, password))
     if resp.status_code != 202:
         print "Error synchronizing BICS: " + resp.status_code
+    return resp.status_code
   else:
     print "Error retrieving IoTCS setup from DBCS: " + iotcs.status_code
+    return iotcs.status_code
 
 def get_lap(car):
   global race_lap_file
@@ -266,6 +268,18 @@ def stop_race(event):
       cad.lcd.write("Race stopped!!")
       cad.lcd.set_cursor(0, 1)
       cad.lcd.write("ID: %s" % id)
+      time.sleep(3)
+      cad.lcd.clear()
+      cad.lcd.set_cursor(0, 0)
+      cad.lcd.write("Sync BICS")
+      cad.lcd.set_cursor(0, 1)
+      cad.lcd.write("Please, wait...")
+      result = sync_bics()
+      cad.lcd.clear()
+      cad.lcd.set_cursor(0, 0)
+      cad.lcd.write("Sync BICS")
+      cad.lcd.set_cursor(0, 1)
+      cad.lcd.write("Result: %d" % result)
       time.sleep(5)
       displayInfoRotation(event.chip)
 
@@ -511,8 +525,6 @@ cad.lcd.backlight_on()
 cad.lcd.blink_off()
 cad.lcd.cursor_off()
 initDisplay(cad)
-
-sync_bics()
 
 listener = pifacecad.SwitchEventListener(chip=cad)
 for i in range(8):
