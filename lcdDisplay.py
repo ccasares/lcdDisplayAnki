@@ -7,6 +7,9 @@ import json
 import pprint
 import os
 
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 INIT=0
 WIFI=1
 SNIFFERS=2
@@ -88,8 +91,7 @@ def sync_bics():
   if iotcs.status_code == 200:
     data = json.loads(iotcs.content)
     print data
-    print data.items
-    print data.items[0].hostname
+    print data["items"]["hostname"]
   else:
     print "Error retrieving IoTCS setup from DBCS: " + iotcs.status_code
 
