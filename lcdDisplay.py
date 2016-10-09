@@ -7,9 +7,6 @@ import json
 import pprint
 import os
 
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
 INIT=0
 WIFI=1
 SNIFFERS=2
