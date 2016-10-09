@@ -93,7 +93,7 @@ def sync_bics():
     password = data["items"][0]["password"]
     applicationid = data["items"][0]["applicationid"]
     integrationid = data["items"][0]["integrationid"]
-    url = "https://" + hostname + ":" + port + "/iot/api/v2/apps/" + applicationid + "/integrations/" + integrationid + "/sync/now"
+    url = "https://" + hostname + ":" + str(port) + "/iot/api/v2/apps/" + applicationid + "/integrations/" + integrationid + "/sync/now"
     resp = requests.post(url, auth=(username, password))
     print resp
 
