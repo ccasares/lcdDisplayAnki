@@ -81,6 +81,8 @@ def sync_bics():
 
   dbcs = read_file(dbcs_host_file)
   demozone = read_file(demozone_file)
+  dbcs = dbcs.rstrip()
+  demozone = demozone.rstrip()
 
   print dbcs
   print demozone
