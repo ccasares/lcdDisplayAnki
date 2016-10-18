@@ -32,6 +32,7 @@ RESET_WIFI_CMD = "sudo ifdown wlan0;sleep 5;sudo ifup wlan0"
 CHECK_INTERNET_CMD = "sudo ping -q -w 1 -c 1 8.8.8.8 > /dev/null 2>&1 && echo U || echo D"
 CHECK_IOTPROXY_CMD = "[ `ps -ef | grep -v grep | grep iotcswrapper| grep -v forever  | wc -l` -eq 1 ] && echo UP || echo DOWN"
 CHECK_IOTPROXY_STATUS_CMD = "curl http://localhost:8888/iot/status 2> /dev/null || echo ERROR"
+RESET_CURRENT_SPEED_DATA_CMD = "curl -i -X POST http://oc-129-152-131-150.compute.oraclecloud.com:8001/BAMHelper/ResetCurrentSpeedService/anki/reset/speed/MADRID 2>/dev/null | grep HTTP | awk '{print $2}'"
 USB_PORTS_CMD = "ls -1 /dev/ttyU* 2>/dev/null | wc -l"
 SNIFFERS_RUNNING_CMD = "ps -ef | grep -v grep | grep  ttyUSB | wc -l"
 REBOOT_CMD = "sudo reboot"
@@ -101,6 +102,9 @@ def sync_bics():
   else:
     print "Error retrieving IoTCS setup from DBCS: " + iotcs.status_code
     return iotcs.status_code
+
+def reset_current_speed():
+  return run_cmd(RESET_CURRENT_SPEED_DATA_CMD)
 
 def get_lap(car):
   global race_lap_file
@@ -275,11 +279,12 @@ def stop_race(event):
       cad.lcd.set_cursor(0, 1)
       cad.lcd.write("Please, wait...")
       result = sync_bics()
+      result_speed = reset_current_speed()
       cad.lcd.clear()
       cad.lcd.set_cursor(0, 0)
       cad.lcd.write("Sync BICS")
       cad.lcd.set_cursor(0, 1)
-      cad.lcd.write("Result: %d" % result)
+      cad.lcd.write("Result: %d %d" % (result,result_speed))
       time.sleep(5)
       displayInfoRotation(event.chip)
 
