@@ -284,7 +284,7 @@ def stop_race(event):
       cad.lcd.set_cursor(0, 0)
       cad.lcd.write("Sync BICS")
       cad.lcd.set_cursor(0, 1)
-      cad.lcd.write("Result: %d %d" % (result,result_speed))
+      cad.lcd.write("Result: %d %s" % (result,result_speed))
       time.sleep(5)
       displayInfoRotation(event.chip)
 
