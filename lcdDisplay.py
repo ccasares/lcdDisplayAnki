@@ -33,6 +33,8 @@ CHECK_INTERNET_CMD = "sudo ping -q -w 1 -c 1 8.8.8.8 > /dev/null 2>&1 && echo U 
 CHECK_IOTPROXY_CMD = "[ `ps -ef | grep -v grep | grep iotcswrapper| grep -v forever  | wc -l` -eq 1 ] && echo UP || echo DOWN"
 CHECK_IOTPROXY_STATUS_CMD = "curl http://localhost:8888/iot/status 2> /dev/null || echo ERROR"
 RESET_CURRENT_SPEED_DATA_CMD = "curl -i -X POST http://oc-129-152-131-150.compute.oraclecloud.com:8001/BAMHelper/ResetCurrentSpeedService/anki/reset/speed/MADRID 2>/dev/null | grep HTTP | awk '{print $2}'"
+UPDATE_CURRENT_RACE_CMD = "curl -i -X POST http://oc-129-152-131-150.compute.oraclecloud.com:8001/BAMHelper/UpdateCurrentRaceService/anki/event/currentrace/MADRID/{RACEID} 2>/dev/null | grep HTTP | awk '{print $2}'"
+
 USB_PORTS_CMD = "ls -1 /dev/ttyU* 2>/dev/null | wc -l"
 SNIFFERS_RUNNING_CMD = "ps -ef | grep -v grep | grep  ttyUSB | wc -l"
 REBOOT_CMD = "sudo reboot"
@@ -105,6 +107,12 @@ def sync_bics():
 
 def reset_current_speed():
   return run_cmd(RESET_CURRENT_SPEED_DATA_CMD)
+
+def sync_race(raceid):
+  URI = UPDATE_CURRENT_RACE_CMD
+  URI = URI.replace("{RACEID}", raceid)
+  #Substitute {raceid} with current raceid
+  return run_cmd(URI)
 
 def get_lap(car):
   global race_lap_file
@@ -246,11 +254,12 @@ def start_race(event):
       resetLapFile(race_lap_Skull_file)
       resetLapFile(race_lap_Guardian_file)
       set_race_status("RACING")
+      result = sync_race(id)
       cad.lcd.clear()
       cad.lcd.set_cursor(0, 0)
       cad.lcd.write("Race started!!")
       cad.lcd.set_cursor(0, 1)
-      cad.lcd.write("ID: %s" % id)
+      cad.lcd.write("ID: %s (%s)" % (id,result))
       time.sleep(5)
       displayInfoRotation(event.chip)
 
