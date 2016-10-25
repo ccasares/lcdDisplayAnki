@@ -110,7 +110,7 @@ def reset_current_speed():
 
 def sync_race(raceid):
   URI = UPDATE_CURRENT_RACE_CMD
-  URI = URI.replace("{RACEID}", raceid)
+  URI = URI.replace("{RACEID}", str(raceid))
   #Substitute {raceid} with current raceid
   return run_cmd(URI)
 
