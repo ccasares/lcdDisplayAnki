@@ -259,7 +259,7 @@ def start_race(event):
       cad.lcd.set_cursor(0, 0)
       cad.lcd.write("Race started!!")
       cad.lcd.set_cursor(0, 1)
-      cad.lcd.write("ID: %s (%s)" % (id,result))
+      cad.lcd.write("ID: %s %s" % (id,str(result)))
       time.sleep(5)
       displayInfoRotation(event.chip)
 
