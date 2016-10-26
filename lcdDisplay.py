@@ -34,6 +34,7 @@ CHECK_IOTPROXY_CMD = "[ `ps -ef | grep -v grep | grep iotcswrapper| grep -v fore
 CHECK_IOTPROXY_STATUS_CMD = "curl http://localhost:8888/iot/status 2> /dev/null || echo ERROR"
 RESET_CURRENT_SPEED_DATA_CMD = "curl -i -X POST http://oc-129-152-131-150.compute.oraclecloud.com:8001/BAMHelper/ResetCurrentSpeedService/anki/reset/speed/MADRID 2>/dev/null | grep HTTP | awk '{print $2}'"
 UPDATE_CURRENT_RACE_CMD = "curl -i -X POST http://oc-129-152-131-150.compute.oraclecloud.com:8001/BAMHelper/UpdateCurrentRaceService/anki/event/currentrace/MADRID/{RACEID} 2>/dev/null | grep HTTP | awk '{print $2}'"
+RESET_RACE_DATA_CMD = "curl -i -X POST http://oc-129-152-131-150.compute.oraclecloud.com:8001/BAMHelper/ResetBAMDataService/anki/reset/bam/MADRID 2>/dev/null | grep HTTP | awk '{print $2}'"
 
 USB_PORTS_CMD = "ls -1 /dev/ttyU* 2>/dev/null | wc -l"
 SNIFFERS_RUNNING_CMD = "ps -ef | grep -v grep | grep  ttyUSB | wc -l"
@@ -107,6 +108,9 @@ def sync_bics():
 
 def reset_current_speed():
   return run_cmd(RESET_CURRENT_SPEED_DATA_CMD)
+
+def reset_race_data():
+  return run_cmd(RESET_RACE_DATA_CMD)
 
 def sync_race(raceid):
   URI = UPDATE_CURRENT_RACE_CMD
@@ -289,6 +293,7 @@ def stop_race(event):
       cad.lcd.write("Please, wait...")
       result = sync_bics()
       result_speed = reset_current_speed()
+      result_reset_data = reset_race_data()
       cad.lcd.clear()
       cad.lcd.set_cursor(0, 0)
       cad.lcd.write("Sync BICS")
