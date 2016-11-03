@@ -11,8 +11,9 @@ INIT=0
 WIFI=1
 SNIFFERS=2
 IOTPROXY=3
-RACE=4
-LAPS=5
+REVERSEPORTS=4
+RACE=5
+#LAPS=5
 currentInfoDisplay=0
 maxInfoDisplay=5
 buttonWaitingForConfirmation=-1
@@ -35,7 +36,11 @@ CHECK_IOTPROXY_STATUS_CMD = "curl http://localhost:8888/iot/status 2> /dev/null 
 RESET_CURRENT_SPEED_DATA_CMD = "curl -i -X POST http://oc-129-152-131-150.compute.oraclecloud.com:8001/BAMHelper/ResetCurrentSpeedService/anki/reset/speed/MADRID 2>/dev/null | grep HTTP | awk '{print $2}'"
 UPDATE_CURRENT_RACE_CMD = "curl -i -X POST http://oc-129-152-131-150.compute.oraclecloud.com:8001/BAMHelper/UpdateCurrentRaceService/anki/event/currentrace/MADRID/{RACEID} 2>/dev/null | grep HTTP | awk '{print $2}'"
 RESET_RACE_DATA_CMD = "curl -i -X POST http://oc-129-152-131-150.compute.oraclecloud.com:8001/BAMHelper/ResetBAMDataService/anki/reset/bam/MADRID 2>/dev/null | grep HTTP | awk '{print $2}'"
-
+CHECK_REVERSEPROXY_CMD = "ssh -i /home/pi/.ssh/anki_drone $reverseProxy \"netstat -ant | grep LISTEN | grep $PORT | wc -l\""
+CHECK_NODEUP_CMD = "wget -q -T 5 --tries 2 -O - http://$reverseProxy:$PORT/drone > /dev/null && echo OK || echo NOK"
+CHECK_WEBSOCKET_CMD = "wget -q -T 5 --tries 1 -O - http://$reverseProxy:$PORT/drone/ping > /dev/null && echo OK || echo NOK"
+RESET_AUTOSSH_CMD = "pkill autossh;/home/pi/bin/setupReverseSSHPorts.sh /home/pi/bin/redirects"
+RESET_NODEJS_CMD = "forever stop drone;forever start --uid drone --append /home/pi/dronecontrol/server.js"
 USB_PORTS_CMD = "ls -1 /dev/ttyU* 2>/dev/null | wc -l"
 SNIFFERS_RUNNING_CMD = "ps -ef | grep -v grep | grep  ttyUSB | wc -l"
 REBOOT_CMD = "sudo reboot"
@@ -142,10 +147,10 @@ def displayInfoRotation(cad):
     sniffersDisplay(cad)
   elif currentInfoDisplay == IOTPROXY:
     iotproxyDisplay(cad)
+  elif currentInfoDisplay == REVERSEPORTS:
+    reversePortsDisplay(cad)
   elif currentInfoDisplay == RACE:
     raceDisplay(cad)
-  elif currentInfoDisplay == LAPS:
-    raceLapsDisplay(cad)
   else:
     print "No more pages"
 
@@ -228,6 +233,23 @@ def resetSniffers(event):
   event.chip.lcd.write(msg)
   time.sleep(5)
   displayInfoRotation(event.chip)
+
+def reversePortsDisplay(cad):
+  cad.lcd.clear()
+  cad.lcd.set_cursor(0, 0)
+  cad.lcd.write("Checking")
+  cad.lcd.set_cursor(0, 1)
+  cad.lcd.write("Please, wait...")
+  prx_status=check_reverse_proxy()
+  node_status=check_nodejs()
+  websocket_status=check_websocket()
+  cad.lcd.clear()
+  cad.lcd.set_cursor(0, 0)
+  cad.lcd.write("PROXY:"+prx_status)
+  cad.lcd.set_cursor(0, 1)
+  cad.lcd.write("NODE:"+node_status )
+  cad.lcd.set_cursor(9, 1)
+  cad.lcd.write(" WS:" + websocket_status)
 
 def resetLapFile(file):
   try:
@@ -394,6 +416,46 @@ def handleButton(button, screen, event):
 	  if buttonWaitingForConfirmation != -1:
 	    displayInfoRotation(event.chip)
 	    buttonWaitingForConfirmation = -1
+  elif screen == REVERSEPORTS:
+    # 1: RESTART AUTOSSH PROCESS
+    # 2: RESTART NODEJS
+    # 5: CONFIRM
+    if buttonWaitingForConfirmation != -1 and button == BUTTON5:
+	  # Confirmation to previous command
+	  if buttonWaitingForConfirmation == BUTTON1:
+	    # RESTART AUTOSSH PROCESS
+	    CMD = RESET_AUTOSSH_CMD
+	    msg = "RESTARTING SSH\nTUNNELING"
+	  else:
+	    # RESTART NODEJS
+	    CMD = RESET_NODEJS_CMD
+	    msg = "RESTARTING\nNODEJS"
+	  buttonWaitingForConfirmation = -1
+	  cad.lcd.clear()
+	  cad.lcd.set_cursor(0, 0)
+	  cad.lcd.write(msg)
+	  run_cmd(CMD)
+	  displayInfoRotation(event.chip)
+    if button == BUTTON1:
+	  buttonWaitingForConfirmation = button
+	  msg = "AUTOSSH RST REQ"
+	  cad.lcd.clear()
+	  cad.lcd.set_cursor(0, 0)
+	  cad.lcd.write(msg)
+	  cad.lcd.set_cursor(0, 1)
+	  cad.lcd.write("CONFIRM RIGHTBTN")
+    elif button == BUTTON2:
+	  buttonWaitingForConfirmation = button
+	  msg = "NODEJS RESET REQ"
+	  cad.lcd.clear()
+	  cad.lcd.set_cursor(0, 0)
+	  cad.lcd.write(msg)
+	  cad.lcd.set_cursor(0, 1)
+	  cad.lcd.write("CONFIRM RIGHTBTN")
+    else:
+	  if buttonWaitingForConfirmation != -1:
+	    displayInfoRotation(event.chip)
+	    buttonWaitingForConfirmation = -1
   elif screen == RACE:
     # 1: START RACE
     # 2: STOP RACE
@@ -401,14 +463,6 @@ def handleButton(button, screen, event):
 	  start_race(event)
     elif button == BUTTON2:
 	  stop_race(event)
-  elif screen == LAPS:
-    # 1: RESET LAPS COUNTER FOR ALL CARS
-    # 5: CONFIRM
-    print "Do stuff with LAPS screen"
-  elif screen == REVERSEPORTS:
-    # 1: RESTART AUTOSSH PROCESSES
-    # 5: CONFIRM
-    print "Do stuff with REVERSEPORTS screen"
   else:
     print "UNKNOWN SCREEN: %s" % screen
 
@@ -517,6 +571,19 @@ def get_my_ip():
 
 def check_internet():
   return run_cmd(CHECK_INTERNET_CMD)
+
+def check_reverse_proxy():
+  listeners=int(run_cmd(CHECK_REVERSEPROXY_CMD))
+  if listeners > 0:
+     return "OK"
+  else:
+     return "NOK"
+
+def check_nodejs():
+   return run_cmd(CHECK_NODEUP_CMD)
+
+def check_websocket():
+   return run_cmd(CHECK_WEBSOCKET_CMD)
 
 def getPiName():
   with open('/home/pi/Desktop/PiInfo.txt', 'r') as f:
